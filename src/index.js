@@ -1,8 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client/react";
+import { ApolloClient, InMemoryCache, gql, useQuery } from "@apollo/client";
 import "./index.css";
-import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 
 const client = new ApolloClient({
@@ -22,10 +22,43 @@ client
   })
   .then((result) => console.log(result));
 
+const EXCHANGE_RATES = gql`
+  query GetExchangeRates {
+    rates(currency: "USD") {
+      currency
+      rate
+    }
+  }
+`;
+
+const ExchangeRates = () => {
+  const { loading, error, data } = useQuery(EXCHANGE_RATES);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error :(</p>;
+
+  return data.rates.map(({ currency, rate }) => (
+    <div key={currency}>
+      <p>
+        {currency}: {rate}
+      </p>
+    </div>
+  ));
+};
+
+const App = () => {
+  return (
+    <div className="App">
+      <h2>Currencies</h2>
+      <ExchangeRates />
+    </div>
+  );
+};
+
 ReactDOM.render(
-  <React.StrictMode>
+  <ApolloProvider client={client}>
     <App />
-  </React.StrictMode>,
+  </ApolloProvider>,
   document.getElementById("root")
 );
 
