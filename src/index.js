@@ -6,42 +6,38 @@ import "./index.css";
 import reportWebVitals from "./reportWebVitals";
 
 const client = new ApolloClient({
-  uri: "https://48p1r2roz4.sse.codesandbox.io",
+  uri: "https://api.spacex.land/graphql/",
   cache: new InMemoryCache(),
 });
 
-client
-  .query({
-    query: gql`
-      query GetRates {
-        rates(currency: "USD") {
-          currency
-        }
+const LAUNCHES = gql`
+  query GetLaunches {
+    launches(limit: 5) {
+      launch_date_utc
+      launch_success
+      rocket {
+        rocket_name
       }
-    `,
-  })
-  .then((result) => console.log(result));
-
-const EXCHANGE_RATES = gql`
-  query GetExchangeRates {
-    rates(currency: "USD") {
-      currency
-      rate
+      links {
+        video_link
+      }
+      details
     }
   }
 `;
 
-const ExchangeRates = () => {
-  const { loading, error, data } = useQuery(EXCHANGE_RATES);
+const Launches = () => {
+  const { loading, error, data } = useQuery(LAUNCHES);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error :(</p>;
 
-  return data.rates.map(({ currency, rate }) => (
-    <div key={currency}>
-      <p>
-        {currency}: {rate}
-      </p>
+  return data.launches.map((launch) => (
+    <div className="card" key={launch}>
+      <h3>{launch.launch_date_utc}</h3>
+      <h3>{launch.rocket.rocket_name}</h3>
+      <p>Was it a success : {launch.launch_success ? "yes" : "no"}</p>
+      <p>{launch.details}</p>
     </div>
   ));
 };
@@ -49,8 +45,10 @@ const ExchangeRates = () => {
 const App = () => {
   return (
     <div className="App">
-      <h2>Currencies</h2>
-      <ExchangeRates />
+      <h2>The 5 Launches</h2>
+      <div className="launches">
+        <Launches />
+      </div>
     </div>
   );
 };
